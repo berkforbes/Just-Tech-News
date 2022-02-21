@@ -88,7 +88,14 @@ router.post("/login", (req, res) => {
       return;
     }
 
-    res.json({ user: dbUserData, message: "You are now logged in!" });
+    req.session.save(() => {
+      // declare session variables
+      req.session.user_id = dbUserData.id;
+      req.session.username = dbUserData.username;
+      req.session.loggedIn = true;
+
+      res.json({ user: dbUserData, message: 'You are now logged in!' });
+    });
   });
 });
 
@@ -114,6 +121,21 @@ router.put("/:id", (req, res) => {
       res.status(500).json(err);
     });
 });
+
+// Log user out and kill session
+router.post('/logout', (req, res) => {
+  if (req.session.loggedIn) {
+    req.session.destroy(() => {
+      res.status(204).end();
+    });
+  }
+  else {
+    res.status(404).end();
+  }
+
+
+});
+
 
 router.delete("/:id", (req, res) => {
   User.destroy({
